@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Documentación de API</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
+    code { font-family: monospace; }
+  </style>
+</head>
+<body>
+  <h1>Documentación de API - Sistema de Entradas, Salidas y Productos</h1>
+  <p>Esta API permite gestionar usuarios, productos, entradas y salidas en un sistema de control financiero e inventario.</p>
+
+  <h2>🔐 Autenticación</h2>
+  <h3>POST /api/auth/login</h3>
+  <p><strong>Body:</strong></p>
+  <pre><code>{
+  "username": "admin",
+  "password": "admin123"
+}</code></pre>
+  <p><strong>Ejemplo:</strong></p>
+  <pre><code>fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: "admin", password: "admin123" }) })</code></pre>
+
+  <h2>💼 Usuarios</h2>
+  <h3>POST /api/auth/register</h3>
+  <p><strong>Body:</strong></p>
+  <pre><code>{ "username": "nuevo", "password": "clave" }</code></pre>
+
+  <h2>📅 Entradas</h2>
+  <h3>POST /api/entradas/</h3>
+  <p><strong>FormData:</strong> tipo, monto, fecha, usuario_id, cantidad, factura, imagen</p>
+  <pre><code>const data = new FormData();
+data.append("tipo", "venta");
+data.append("monto", 100);
+data.append("fecha", "2025-03-21");
+data.append("usuario_id", 1);
+data.append("cantidad", 2);
+fetch("/api/entradas/", { method: "POST", body: data });</code></pre>
+
+  <h3>GET /api/entradas/{usuario_id}</h3>
+  <pre><code>fetch("/api/entradas/1")</code></pre>
+
+  <h3>PUT /api/entradas/update/{id}</h3>
+  <p><strong>FormData:</strong> como en POST, incluyendo rol</p>
+  <pre><code>data.append("rol", "admin");
+fetch("/api/entradas/update/1", { method: "PUT", body: data });</code></pre>
+
+  <h3>DELETE /api/entradas/delete/{id}</h3>
+  <pre><code>fetch("/api/entradas/delete/1?usuario_id=1&rol=admin", { method: "DELETE" });</code></pre>
+
+  <h2>📦 Salidas</h2>
+  <h3>POST /api/salidas/</h3>
+  <p><strong>FormData:</strong> tipo, monto, fecha, usuario_id, cantidad</p>
+  <pre><code>data.append("tipo", "compra producto 1");
+data.append("cantidad", 3);
+fetch("/api/salidas/", { method: "POST", body: data });</code></pre>
+
+  <h3>GET /api/salidas/{usuario_id}</h3>
+  <pre><code>fetch("/api/salidas/1");</code></pre>
+
+  <h2>📈 Productos</h2>
+  <h3>GET /api/productos</h3>
+  <pre><code>fetch("/api/productos");</code></pre>
+
+  <p>Asegurate de que tu backend corre en <code>http://127.0.0.1:5000</code> y que tengas CORS habilitado.</p>
+</body>
+</html>
