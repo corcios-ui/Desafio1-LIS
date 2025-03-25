@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, send_from_directory
 from flask_cors import CORS
 import os
 
@@ -24,8 +24,20 @@ app.register_blueprint(productos_bp)
 
 # Ruta raíz para documentación básica
 @app.route('/')
-def index():
-    return render_template('index.html')
+def home():
+    return render_template('documentacion.html')  # Esto apunta a templates/index.html
+
+@app.route('/inicio')
+def inicio():
+    return render_template('index.html')  # Esto busca en la carpeta "templates"
+
+@app.route('/dashboard')
+def dashboard():
+    return render_template('dashboard.html')  # Esto apunta a templates/dashboard.html
+
+@app.route('/uploads/<path:filename>')
+def uploaded_file(filename):
+    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -2,68 +2,72 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Documentación de API</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
-    code { font-family: monospace; }
-  </style>
+  <title>Login</title>
 </head>
 <body>
-  <h1>Documentación de API - Sistema de Entradas, Salidas y Productos</h1>
-  <p>Esta API permite gestionar usuarios, productos, entradas y salidas en un sistema de control financiero e inventario.</p>
+  <h2>Iniciar Sesión</h2>
+  <form id="loginForm">
+    <input type="text" id="username" placeholder="Usuario" required>
+    <input type="password" id="password" placeholder="Contraseña" required>
+    <button type="submit">Ingresar</button>
+  </form>
 
-  <h2>🔐 Autenticación</h2>
-  <h3>POST /api/auth/login</h3>
-  <p><strong>Body:</strong></p>
-  <pre><code>{
-  "username": "admin",
-  "password": "admin123"
-}</code></pre>
-  <p><strong>Ejemplo:</strong></p>
-  <pre><code>fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: "admin", password: "admin123" }) })</code></pre>
+  <hr>
+  <h3>Productos Disponibles</h3>
+  <div id="productos"></div>
 
-  <h2>💼 Usuarios</h2>
-  <h3>POST /api/auth/register</h3>
-  <p><strong>Body:</strong></p>
-  <pre><code>{ "username": "nuevo", "password": "clave" }</code></pre>
+  <script src="{{ url_for('static', filename='js/login.js') }}"></script>
+  <script>
+    const user_id = localStorage.getItem("user_id") || "cliente";
 
-  <h2>📅 Entradas</h2>
-  <h3>POST /api/entradas/</h3>
-  <p><strong>FormData:</strong> tipo, monto, fecha, usuario_id, cantidad, factura, imagen</p>
-  <pre><code>const data = new FormData();
-data.append("tipo", "venta");
-data.append("monto", 100);
-data.append("fecha", "2025-03-21");
-data.append("usuario_id", 1);
-data.append("cantidad", 2);
-fetch("/api/entradas/", { method: "POST", body: data });</code></pre>
+    async function cargarProductos() {
+      const res = await fetch("http://127.0.0.1:5000/api/productos");
+      const productos = await res.json();
+      const contenedor = document.getElementById("productos");
 
-  <h3>GET /api/entradas/{usuario_id}</h3>
-  <pre><code>fetch("/api/entradas/1")</code></pre>
+      productos.forEach(prod => {
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <strong>${prod.nombre}</strong> - $${prod.precio} <br>
+          ${prod.detalles}<br>
+          Cantidad disponible: ${prod.cantidad}<br>
+          ${prod.imagen ? `<img src="/uploads/${prod.imagen}" style="max-width:100px">` : ""}
+          <form onsubmit="return comprarProducto(event, ${prod.id}, ${prod.precio})">
+            <input type="number" name="cantidad" placeholder="Cantidad a comprar" min="1" max="${prod.cantidad}" required>
+            <button type="submit">Comprar</button>
+          </form>
+          <hr>
+        `;
+        contenedor.appendChild(div);
+      });
+    }
 
-  <h3>PUT /api/entradas/update/{id}</h3>
-  <p><strong>FormData:</strong> como en POST, incluyendo rol</p>
-  <pre><code>data.append("rol", "admin");
-fetch("/api/entradas/update/1", { method: "PUT", body: data });</code></pre>
+    async function comprarProducto(e, productoId, precio) {
+      e.preventDefault();
+      const cantidad = parseInt(e.target.cantidad.value);
+      if (!cantidad || cantidad <= 0) return;
 
-  <h3>DELETE /api/entradas/delete/{id}</h3>
-  <pre><code>fetch("/api/entradas/delete/1?usuario_id=1&rol=admin", { method: "DELETE" });</code></pre>
+      const data = new FormData();
+      data.append("tipo", "compra producto " + productoId);
+      data.append("monto", cantidad * precio);
+      data.append("fecha", new Date().toISOString().split("T")[0]);
+      data.append("usuario_id", user_id);
+      data.append("cantidad", cantidad);
 
-  <h2>📦 Salidas</h2>
-  <h3>POST /api/salidas/</h3>
-  <p><strong>FormData:</strong> tipo, monto, fecha, usuario_id, cantidad</p>
-  <pre><code>data.append("tipo", "compra producto 1");
-data.append("cantidad", 3);
-fetch("/api/salidas/", { method: "POST", body: data });</code></pre>
+      const res = await fetch("http://127.0.0.1:5000/api/salidas/", {
+        method: "POST",
+        body: data
+      });
 
-  <h3>GET /api/salidas/{usuario_id}</h3>
-  <pre><code>fetch("/api/salidas/1");</code></pre>
+      if (res.ok) {
+        alert("Compra realizada");
+        cargarProductos();
+      } else {
+        alert("Error al procesar la compra");
+      }
+    }
 
-  <h2>📈 Productos</h2>
-  <h3>GET /api/productos</h3>
-  <pre><code>fetch("/api/productos");</code></pre>
-
-  <p>Asegurate de que tu backend corre en <code>http://127.0.0.1:5000</code> y que tengas CORS habilitado.</p>
+    cargarProductos();
+  </script>
 </body>
 </html>
