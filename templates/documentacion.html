@@ -7,10 +7,35 @@
     body { font-family: Arial, sans-serif; padding: 20px; }
     pre { background: #f0f0f0; padding: 10px; overflow-x: auto; }
     code { font-family: monospace; }
+    .acciones {
+      display: flex;
+      justify-content: end;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .btn-dashboard {
+      background-color: #0d6efd;
+    }
+    .btn-salir {
+      background-color: #dc3545;
+    }
   </style>
 </head>
 <body>
-  <h1>Documentación de API - Sistema de Entradas, Salidas y Productos</h1>
+  <div class="acciones">
+    <a href="/dashboard" class="btn btn-dashboard">Volver al Dashboard</a>
+    <button onclick="logout()" class="btn btn-salir">Cerrar sesión</button>
+  </div>
+  <h1>Documentación de API - Sistema Financiero de Entradas, Salidas y Balance</h1>
   <p>Esta API permite gestionar usuarios, productos, entradas y salidas en un sistema de control financiero e inventario.</p>
 
   <h2>🔐 Autenticación</h2>
@@ -60,10 +85,13 @@ fetch("/api/salidas/", { method: "POST", body: data });</code></pre>
   <h3>GET /api/salidas/{usuario_id}</h3>
   <pre><code>fetch("/api/salidas/1");</code></pre>
 
-  <h2>📈 Productos</h2>
-  <h3>GET /api/productos</h3>
-  <pre><code>fetch("/api/productos");</code></pre>
-
   <p>Asegurate de que tu backend corre en <code>http://127.0.0.1:5000</code> y que tengas CORS habilitado.</p>
+  
 </body>
 </html>
+
+<script>function logout() {
+  localStorage.clear();
+  window.location.href = "/";
+}
+</script>

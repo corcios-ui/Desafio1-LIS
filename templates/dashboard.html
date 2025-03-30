@@ -1,48 +1,120 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8">
   <title>Dashboard</title>
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- SweetAlert2 CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet">
   <style>
-    img { max-width: 150px; display: block; margin-top: 5px; }
-    .item { border: 1px solid #ccc; padding: 10px; margin: 10px 0; }
-    .admin-controls { margin-top: 5px; }
+    img {
+      max-width: 150px;
+      display: block;
+      margin-top: 5px;
+    }
+
+    .item {
+      border: 1px solid #ccc;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+
+    .admin-controls {
+      margin-top: 10px;
+    }
   </style>
 </head>
-<body>
+
+<body class="container mt-4">
   <h2>Dashboard</h2>
-  <div>
-    <strong>Usuario:</strong> <span id="rolUsuario"></span>
-    <button onclick="logout()">Cerrar sesión</button>
+  <div class="d-flex justify-content-between align-items-center">
+    <div>
+      <strong>Usuario:</strong> <span id="rolUsuario"></span>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="/documentacion" class="btn btn-info btn-sm">Documentación</a>
+      <button onclick="logout()" class="btn btn-danger btn-sm">Cerrar sesión</button>
+    </div>
   </div>
+
+  <div class="alert alert-success mt-3" id="mensajeBienvenida" style="display:none;"></div>
+
+
 
   <hr>
   <h3>Agregar Entrada</h3>
-  <form id="formEntrada">
-    <input type="text" name="tipo" placeholder="Tipo" required>
-    <input type="number" name="monto" placeholder="Monto" required>
-    <input type="date" name="fecha" required>
-    <input type="number" name="cantidad" placeholder="Cantidad" required>
-    <input type="file" name="factura">
-    <input type="file" name="imagen">
-    <button type="submit">Guardar Entrada</button>
+  <form id="formEntrada" class="row g-2">
+    <div class="col-md-3">
+      <input type="text" name="tipo" class="form-control" placeholder="Tipo de entrada" required>
+    </div>
+    <div class="col-md-3">
+      <input type="number" name="monto" class="form-control" placeholder="Monto" required>
+    </div>
+    <div class="col-md-3">
+      <input type="date" name="fecha" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <input type="file" name="factura" class="form-control">
+    </div>
+    <div class="col-12">
+      <button type="submit" class="btn btn-primary">Guardar Salida</button>
+    </div>
   </form>
 
-  <h3>Entradas</h3>
+  <h3 class="mt-4">Entradas</h3>
   <div id="entradas"></div>
 
+
   <hr>
-  <h3>Productos Existentes</h3>
-  <div id="productos"></div>
+  <h3>Registrar Salida</h3>
+  <form id="formSalida" class="row g-2">
+    <div class="col-md-3">
+      <input type="text" name="tipo" class="form-control" placeholder="Tipo de salida" required>
+    </div>
+    <div class="col-md-3">
+      <input type="number" name="monto" class="form-control" placeholder="Monto" required>
+    </div>
+    <div class="col-md-3">
+      <input type="date" name="fecha" class="form-control" required>
+    </div>
+    <div class="col-md-3">
+      <input type="file" name="factura" class="form-control">
+    </div>
+    <div class="col-12">
+      <button type="submit" class="btn btn-primary">Guardar Salida</button>
+    </div>
+  </form>
+
+  <h3 class="mt-4">Salidas</h3>
+  <div id="salidas"></div>
+
+  <!-- Bootstrap JS Bundle -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <script>
     const user_id = localStorage.getItem("user_id");
     const rol = localStorage.getItem("rol");
     document.getElementById("rolUsuario").innerText = rol;
 
+    // Mensaje de bienvenida
+    const mensajeDiv = document.getElementById("mensajeBienvenida");
+    if (rol && mensajeDiv) {
+      mensajeDiv.textContent = `¡Bienvenido(a) al sistema, ${rol === 'admin' ? 'Administrador' : 'Usuario'}!`;
+      mensajeDiv.style.display = "block";
+    }
+
+
     if (!user_id) {
-      alert("Debes iniciar sesión");
-      window.location.href = "/inicio";
+      Swal.fire({
+        icon: "warning",
+        title: "Debes iniciar sesión",
+        confirmButtonText: "OK"
+      }).then(() => window.location.href = "/");
     }
 
     document.getElementById("formEntrada").addEventListener("submit", async (e) => {
@@ -58,7 +130,6 @@
 
       form.reset();
       cargarEntradas();
-      cargarProductos();
     });
 
     async function cargarEntradas() {
@@ -74,7 +145,7 @@
           <strong>${ent.tipo}</strong> - $${ent.monto} <br>
           Fecha: ${ent.fecha}<br>
           Cantidad: ${ent.cantidad || 'N/A'}<br>
-          ${ent.factura_ruta ? `<a href="/uploads/${ent.factura_ruta}" target="_blank">Factura</a>` : ""}
+          ${ent.factura_ruta ? `<a href="/uploads/${ent.factura_ruta}" target="_blank">Ver Factura</a><br>` : ""}
           ${ent.imagen_articulo ? `<img src="/uploads/${ent.imagen_articulo}" alt="Articulo">` : ""}
         `;
 
@@ -82,8 +153,8 @@
           const acciones = document.createElement("div");
           acciones.className = "admin-controls";
           acciones.innerHTML = `
-            <button onclick="eliminarEntrada(${ent.id})">Eliminar</button>
-            <button onclick='editarEntrada(${JSON.stringify(ent)})'>Editar</button>
+            <button onclick="eliminarEntrada(${ent.id})" class="btn btn-danger btn-sm me-1">Eliminar</button>
+            <button onclick='editarEntrada(${JSON.stringify(ent)})' class="btn btn-warning btn-sm">Editar</button>
           `;
           div.appendChild(acciones);
         }
@@ -92,94 +163,195 @@
       });
     }
 
-    async function cargarProductos() {
-      const res = await fetch("http://127.0.0.1:5000/api/productos");
-      const productos = await res.json();
-      const contenedor = document.getElementById("productos");
+    async function cargarSalidas() {
+      const res = await fetch(`http://127.0.0.1:5000/api/salidas/${user_id}`);
+      const salidas = await res.json();
+      const contenedor = document.getElementById("salidas");
       contenedor.innerHTML = "";
 
-      productos.forEach(prod => {
+      salidas.forEach(salida => {
         const div = document.createElement("div");
         div.className = "item";
         div.innerHTML = `
-          <strong>${prod.nombre}</strong> - $${prod.precio} <br>
-          ${prod.detalles}<br>
-          Cantidad disponible: ${prod.cantidad}<br>
-          ${prod.imagen ? `<img src="/uploads/${prod.imagen}" alt="Producto">` : ""}
-          <form onsubmit="return comprarProducto(event, ${prod.id}, ${prod.precio})">
-            <input type="number" name="cantidad" placeholder="Cantidad a comprar" min="1" max="${prod.cantidad}" required>
-            <button type="submit">Comprar</button>
-          </form>
-        `;
+      <strong>${salida.tipo}</strong> - $${salida.monto} <br>
+      Fecha: ${salida.fecha}<br>
+      Cantidad: ${salida.cantidad || 'N/A'}<br>
+      ${salida.factura_ruta ? `<a href="/uploads/${salida.factura_ruta}" target="_blank">Ver factura</a><br>` : ""}
+    `;
+
+        if (rol === 'admin' || salida.usuario_id == user_id) {
+          const acciones = document.createElement("div");
+          acciones.className = "admin-controls";
+          acciones.innerHTML = `
+        <button onclick="eliminarSalida(${salida.id})" class="btn btn-danger btn-sm me-1">Eliminar</button>
+        <button onclick='editarSalida(${JSON.stringify(salida)})' class="btn btn-warning btn-sm">Editar</button>
+      `;
+          div.appendChild(acciones);
+        }
+
         contenedor.appendChild(div);
       });
     }
 
-    async function comprarProducto(e, productoId, precio) {
-      e.preventDefault();
-      const cantidad = parseInt(e.target.cantidad.value);
-      if (!cantidad || cantidad <= 0) return;
-
-      const data = new FormData();
-      data.append("tipo", "compra producto " + productoId);
-      data.append("monto", cantidad * precio);
-      data.append("fecha", new Date().toISOString().split("T")[0]);
-      data.append("usuario_id", user_id);
-      data.append("cantidad", cantidad);
-
-      const res = await fetch("http://127.0.0.1:5000/api/salidas/", {
-        method: "POST",
-        body: data
-      });
-
-      if (res.ok) {
-        alert("Compra realizada");
-        cargarProductos();
-      } else {
-        alert("Error al procesar la compra");
-      }
-    }
 
     async function eliminarEntrada(id) {
-      const confirmacion = confirm("¿Estás seguro de eliminar?");
-      if (!confirmacion) return;
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "Esta acción no se puede deshacer",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+      });
+
+      if (!result.isConfirmed) return;
 
       await fetch(`http://127.0.0.1:5000/api/entradas/delete/${id}?usuario_id=${user_id}&rol=${rol}`, {
         method: "DELETE"
       });
 
       cargarEntradas();
-      cargarProductos();
+    }
+
+    async function eliminarSalida(id) {
+      const result = await Swal.fire({
+        title: "¿Estás seguro?",
+        text: "Esta salida será eliminada",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Sí, eliminar",
+        cancelButtonText: "Cancelar"
+      });
+
+      if (!result.isConfirmed) return;
+
+      await fetch(`http://127.0.0.1:5000/api/salidas/delete/${id}?usuario_id=${user_id}&rol=${rol}`, {
+        method: "DELETE"
+      });
+
+      cargarSalidas();
     }
 
     function editarEntrada(entrada) {
-      const tipo = prompt("Nuevo tipo:", entrada.tipo);
-      const monto = prompt("Nuevo monto:", entrada.monto);
-      const fecha = prompt("Nueva fecha:", entrada.fecha);
-      const cantidad = prompt("Nueva cantidad:", entrada.cantidad || "1");
-      if (!tipo || !monto || !fecha || !cantidad) return;
+      Swal.fire({
+        title: "Editar Entrada",
+        html: `
+        <div class="mb-3">
+        <label for="editTipoEntrada" class="form-label">Entrada</label>
+        <input type="text" id="editTipoEntrada" class="swal2-input input-tipo" value="${entrada.tipo}">
+        </div>
 
-      const data = new FormData();
-      data.append("tipo", tipo);
-      data.append("monto", monto);
-      data.append("fecha", fecha);
-      data.append("cantidad", cantidad);
-      data.append("usuario_id", user_id);
-      data.append("rol", rol);
+        <div class="mb-3">
+        <label class="form-label mt-2">Monto</label>
+        <input type="number" class="swal2-input input-monto" value="${entrada.monto}">
+        </div>
 
-      fetch(`http://127.0.0.1:5000/api/entradas/update/${entrada.id}`, {
-        method: "PUT",
-        body: data
-      }).then(() => cargarEntradas());
+        <div class="mb-3">
+        <label class="form-label mt-2">Fecha</label>
+        <input type="date" class="swal2-input input-fecha" value="${entrada.fecha}">
+        </div>
+
+        <div class="mb-3">
+        <label class="form-label mt-2">Cantidad</label>
+        <input type="number" class="swal2-input input-cantidad" value="${entrada.cantidad || 1}">
+      </div>
+    `,
+        showCancelButton: true,
+        confirmButtonText: "Guardar",
+        cancelButtonText: "Cancelar",
+        focusConfirm: false,
+        preConfirm: () => {
+          return {
+            tipo: document.querySelector('.input-tipo').value,
+            monto: document.querySelector('.input-monto').value,
+            fecha: document.querySelector('.input-fecha').value,
+            cantidad: document.querySelector('.input-cantidad').value
+          };
+        }
+      }).then(result => {
+        if (!result.isConfirmed) return;
+        const { tipo, monto, fecha, cantidad } = result.value;
+
+        const data = new FormData();
+        data.append("tipo", tipo);
+        data.append("monto", monto);
+        data.append("fecha", fecha);
+        data.append("cantidad", cantidad);
+        data.append("usuario_id", user_id);
+        data.append("rol", rol);
+
+        fetch(`http://127.0.0.1:5000/api/entradas/update/${entrada.id}`, {
+          method: "PUT",
+          body: data
+        }).then(() => cargarEntradas());
+      });
     }
+
+    function editarSalida(salida) {
+      Swal.fire({
+        title: "Editar Salida",
+        html: `
+      <div class="mb-3">
+        <label for="editTipoSalida" class="form-label">Salida</label>
+        <input type="text" id="editTipoSalida" class="swal2-input input-tipo" value="${salida.tipo}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label mt-2">Monto</label>
+        <input type="number" class="swal2-input input-monto" value="${salida.monto}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label mt-2">Fecha</label>
+        <input type="date" class="swal2-input input-fecha" value="${salida.fecha}">
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label mt-2">Cantidad</label>
+        <input type="number" class="swal2-input input-cantidad" value="${salida.cantidad || 1}">
+      </div>
+    `,
+        showCancelButton: true,
+        confirmButtonText: "Guardar",
+        cancelButtonText: "Cancelar",
+        focusConfirm: false,
+        preConfirm: () => {
+          return {
+            tipo: document.querySelector('.input-tipo').value,
+            monto: document.querySelector('.input-monto').value,
+            fecha: document.querySelector('.input-fecha').value,
+            cantidad: document.querySelector('.input-cantidad').value
+          };
+        }
+      }).then(result => {
+        if (!result.isConfirmed) return;
+        const { tipo, monto, fecha, cantidad } = result.value;
+
+        const data = new FormData();
+        data.append("tipo", tipo);
+        data.append("monto", monto);
+        data.append("fecha", fecha);
+        data.append("cantidad", cantidad);
+        data.append("usuario_id", user_id);
+        data.append("rol", rol);
+
+        fetch(`http://127.0.0.1:5000/api/salidas/update/${salida.id}`, {
+          method: "PUT",
+          body: data
+        }).then(() => cargarSalidas());
+      });
+    }
+
 
     function logout() {
       localStorage.clear();
-      window.location.href = "/inicio";
+      window.location.href = "/";
     }
 
     cargarEntradas();
-    cargarProductos();
+    cargarSalidas();
   </script>
+  <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
 </body>
+
 </html>
